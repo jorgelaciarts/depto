@@ -1,0 +1,1026 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bitácora de Departamentos</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+
+:root{
+  --bg: #DFF3EA;
+  --bg-panel: #FFFFFF;
+  --bg-panel-2: #F7FAF9;
+  --line: #DCE3E2;
+  --accent: #3D6A8A;
+  --accent-soft: rgba(61,106,138,0.08);
+  --ink: #1B2A33;
+  --ink-soft: #5B6E78;
+  --ink-faint: #8A9AA1;
+  --copper: #C9793F;
+  --copper-soft: rgba(201,121,63,0.16);
+  --moss: #4F7A4B;
+  --moss-soft: rgba(79,122,75,0.14);
+  --brick: #B14B3F;
+  --brick-soft: rgba(177,75,63,0.12);
+  --shadow-sm: 0 1px 2px rgba(27,42,51,0.04), 0 1px 1px rgba(27,42,51,0.03);
+  --shadow-md: 0 4px 14px rgba(27,42,51,0.06), 0 1px 3px rgba(27,42,51,0.04);
+  --font-display: 'Space Grotesk', sans-serif;
+  --font-body: 'IBM Plex Sans', sans-serif;
+  --font-mono: 'IBM Plex Mono', monospace;
+}
+
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{
+  background-color: var(--bg);
+  font-family: var(--font-body);
+  color: var(--ink);
+  min-height: 100vh;
+  padding: 24px 16px 80px;
+}
+
+.wrap{ max-width: 1080px; margin: 0 auto; }
+
+/* ---------- corner marks (signature motif) ---------- */
+.frame{ position:relative; }
+.corners{ position:absolute; inset:0; pointer-events:none; }
+.corners i{ position:absolute; width:11px; height:11px; }
+.corners i.tl{ top:-1px; left:-1px; border-top:2px solid var(--accent); border-left:2px solid var(--accent);}
+.corners i.tr{ top:-1px; right:-1px; border-top:2px solid var(--accent); border-right:2px solid var(--accent);}
+.corners i.bl{ bottom:-1px; left:-1px; border-bottom:2px solid var(--accent); border-left:2px solid var(--accent);}
+.corners i.br{ bottom:-1px; right:-1px; border-bottom:2px solid var(--accent); border-right:2px solid var(--accent);}
+
+/* ---------- header / title block ---------- */
+header.titleblock{
+  background: var(--bg-panel);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  box-shadow: var(--shadow-md);
+  padding: 22px 24px;
+  margin-bottom: 18px;
+}
+.eyebrow{
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  color: var(--accent);
+  text-transform: uppercase;
+}
+h1{
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(24px, 4vw, 34px);
+  letter-spacing: 0.01em;
+  margin: 4px 0 6px;
+  text-transform: uppercase;
+  color: var(--ink);
+}
+.tagline{
+  color: var(--ink-soft);
+  font-size: 14px;
+  max-width: 56ch;
+  line-height: 1.5;
+  margin: 0 0 14px;
+}
+.project-name{
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(18px, 3.2vw, 26px);
+  letter-spacing: 0.015em;
+  color: var(--copper);
+  margin: 0 0 16px;
+}
+.sync-row{
+  display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px;
+  margin-bottom: 16px;
+  font-family: var(--font-mono); font-size: 11.5px; color: var(--ink-faint);
+}
+.sync-actions{ display:flex; gap:8px; flex-wrap:wrap; }
+.stats-row{
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  border-top: 1px solid var(--line);
+}
+.stat{
+  padding: 12px 14px 4px;
+  border-left: 1px solid var(--line);
+}
+.stat:first-child{ border-left: none; padding-left: 2px; }
+.stat-label{
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+.stat-value{
+  font-family: var(--font-mono);
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--ink);
+  margin-top: 4px;
+}
+.stat-value.editable{ cursor: pointer; border-bottom: 1px dashed var(--line); display:inline-block; }
+.stat-value.editable:hover{ color: var(--copper); }
+.stat-value input{
+  font-family: var(--font-mono);
+  font-size: 20px;
+  font-weight: 600;
+  width: 100px;
+  background: var(--bg-panel-2);
+  color: var(--ink);
+  border: 1px solid var(--copper);
+  padding: 2px 4px;
+}
+
+/* ---------- buttons ---------- */
+button{ font-family: var(--font-body); cursor: pointer; }
+.btn{
+  background: var(--bg-panel);
+  border: 1px solid var(--line);
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 500;
+  padding: 9px 16px;
+  letter-spacing: 0.02em;
+  transition: border-color .15s, color .15s, background .15s;
+}
+.btn:hover{ border-color: var(--copper); color: var(--copper); }
+.btn-primary{
+  background: var(--copper);
+  border-color: var(--copper);
+  color: #2A1607;
+  font-weight: 600;
+  box-shadow: var(--shadow-sm);
+}
+.btn-primary:hover{ background: #D98A4F; color: #2A1607; border-color:#D98A4F; }
+.btn-ghost{ background: transparent; border-color: transparent; color: var(--ink-soft); padding: 6px 8px;}
+.btn-ghost:hover{ color: var(--copper); border-color: transparent; background:none;}
+.btn-small{ font-size: 12px; padding: 6px 10px; }
+.icon-btn{
+  background: var(--bg-panel); border: 1px solid var(--line); color: var(--ink-soft);
+  width: 30px; height: 30px; display:inline-flex; align-items:center; justify-content:center;
+  font-size: 14px; padding:0; border-radius: 4px;
+}
+.icon-btn:hover{ border-color: var(--copper); color: var(--copper); }
+.icon-btn.danger:hover{ border-color: var(--brick); color: var(--brick); }
+
+/* ---------- add panel ---------- */
+.toolbar{ display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom: 14px; }
+.filters{ display:flex; gap:6px; flex-wrap:wrap; }
+.filter-btn{
+  background: var(--bg-panel); border:1px solid var(--line); color: var(--ink-soft);
+  font-family: var(--font-mono); font-size: 11px; letter-spacing:0.04em;
+  padding: 7px 12px; text-transform: uppercase; border-radius: 4px;
+}
+.filter-btn.active{ background: var(--accent); color: #FFFFFF; border-color: var(--accent); font-weight:600;}
+.filter-btn:hover:not(.active){ border-color: var(--accent); color: var(--accent); }
+
+.panel{
+  background: var(--bg-panel);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  box-shadow: var(--shadow-md);
+  padding: 20px;
+  margin-bottom: 18px;
+}
+.panel-title{
+  font-family: var(--font-display);
+  font-size: 15px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.03em;
+  margin: 0 0 16px; color: var(--accent);
+}
+.form-grid{
+  display:grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+}
+.field{ display:flex; flex-direction:column; gap: 6px; }
+.field.span-2{ grid-column: span 2; }
+.field.span-4{ grid-column: span 4; }
+.field label{
+  font-family: var(--font-mono); font-size: 10.5px; letter-spacing: 0.06em;
+  text-transform: uppercase; color: var(--ink-faint);
+}
+.field input[type=text], .field input[type=number], .field input[type=url], .field textarea{
+  background: var(--bg-panel-2);
+  border: 1px solid var(--line);
+  color: var(--ink);
+  padding: 9px 10px;
+  font-family: var(--font-body);
+  font-size: 13.5px;
+  border-radius: 4px;
+}
+.field input:focus, .field textarea:focus{ outline: none; border-color: var(--copper); }
+.field textarea{ resize: vertical; min-height: 44px; font-family: var(--font-body); }
+.checks{ display:flex; gap: 18px; align-items:center; }
+.check{ display:flex; align-items:center; gap: 7px; font-size: 13px; color: var(--ink-soft); }
+.form-actions{ display:flex; justify-content:flex-end; gap:10px; margin-top: 16px; }
+.error-text{ color: var(--brick); font-size: 12.5px; margin-top: -4px; }
+.help-text{ color: var(--ink-soft); font-size: 12.5px; line-height:1.6; }
+
+/* ---------- empty state ---------- */
+.empty{
+  background: var(--bg-panel-2);
+  border: 1px dashed var(--line);
+  border-radius: 6px;
+  padding: 48px 24px;
+  text-align: center;
+  color: var(--ink-soft);
+}
+.empty p{ max-width: 42ch; margin: 8px auto 18px; line-height:1.5; font-size: 14px;}
+
+/* ---------- table ---------- */
+.table-wrap{
+  background: var(--bg-panel);
+  color: var(--ink);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  box-shadow: var(--shadow-md);
+  overflow: hidden;
+}
+table{ width: 100%; border-collapse: collapse; }
+thead th{
+  text-align: left;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  background: var(--bg-panel-2);
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--line);
+  white-space: nowrap;
+}
+thead th.sortable{ cursor:pointer; user-select:none; }
+thead th.sortable:hover{ color: var(--ink); }
+thead th .arrow{ font-size:9px; margin-left:3px; opacity:.6; }
+tbody tr{ border-bottom: 1px solid var(--line); }
+tbody tr:last-child{ border-bottom:none; }
+tbody tr.descartado{ opacity: 0.5; }
+tbody tr.descartado .addr{ text-decoration: line-through; }
+td{ padding: 12px; font-size: 13.5px; vertical-align: top; }
+.addr{ font-weight: 600; }
+.comuna{ color: var(--ink-soft); font-size: 12px; }
+.fecha{ color: var(--ink-faint); font-size: 11px; margin-top:2px; }
+.price-main{ font-family: var(--font-mono); font-weight:600; }
+.price-sub{ font-family: var(--font-mono); color: var(--ink-soft); font-size: 11.5px; }
+.m2val{ font-family: var(--font-mono); }
+.badge{
+  display:inline-block; font-family: var(--font-mono); font-size: 9.5px; letter-spacing:0.03em;
+  text-transform: uppercase; padding: 2px 6px; margin-top: 4px; border-radius: 3px;
+}
+.badge-copper{ background: var(--copper-soft); color: #8A4F1E; }
+.badge-moss{ background: var(--moss-soft); color: #2F4A2C; }
+.notas-cell{ max-width: 220px; font-size: 12.5px; color: var(--ink-soft); }
+.editable-notes{ cursor: pointer; padding: 4px 6px; margin: -4px -6px; border-radius: 4px; transition: background .12s; }
+.editable-notes:hover{ background: var(--accent-soft); }
+.notas-placeholder{ color: var(--ink-faint); font-style: italic; }
+.row-num{ font-family: var(--font-mono); color: var(--ink-faint); font-weight:600; font-size:12px; }
+.notas-edit{
+  width: 100%; min-width: 180px; min-height: 52px;
+  font-family: var(--font-body); font-size: 12.5px; color: var(--ink);
+  background: #FFFFFF; border: 1px solid var(--copper); border-radius: 4px;
+  padding: 6px 8px; resize: vertical;
+}
+.notas-edit:focus{ outline: none; }
+.extras{ font-size: 12px; color: var(--ink-soft); }
+.actions-cell{ display:flex; gap:6px; }
+.state-checks{ display:flex; flex-direction:column; gap:6px; align-items:flex-start; }
+.state-checks label{ display:flex; align-items:center; gap:6px; font-size: 11.5px; cursor:pointer; }
+.state-checks input{ accent-color: var(--copper); width:14px; height:14px; }
+.tag-revisado{ color: var(--moss); font-weight:600; }
+.tag-favorito{ color: var(--copper); font-weight:600; }
+.tag-descartado{ color: var(--brick); font-weight:600; }
+
+/* ---------- footer / backup ---------- */
+footer{ margin-top: 24px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; }
+footer .hint{ color: var(--ink-faint); font-size: 11.5px; max-width:48ch; }
+.backup-actions{ display:flex; gap:8px; }
+#import-input{ display:none; }
+
+/* ---------- setup screen ---------- */
+.setup-wrap{ max-width: 600px; margin: 40px auto; }
+.setup-wrap ol{ padding-left: 20px; color: var(--ink-soft); font-size: 13.5px; line-height:1.9; }
+.setup-wrap ol li{ margin-bottom:6px; }
+.setup-wrap code{ background: var(--bg-panel-2); border:1px solid var(--line); padding:1px 5px; font-family:var(--font-mono); font-size:12px; color: var(--accent); border-radius: 3px; }
+.setup-wrap a{ color: var(--accent); }
+.setup-grid{ display:grid; grid-template-columns: 1fr; gap:14px; margin-top:16px; }
+
+/* ---------- responsive ---------- */
+@media (max-width: 760px){
+  .stats-row{ grid-template-columns: repeat(2,1fr); }
+  .stat:nth-child(3){ border-left:none; }
+  .form-grid{ grid-template-columns: repeat(2,1fr); }
+  .field.span-2{ grid-column: span 2; }
+  .field.span-4{ grid-column: span 2; }
+
+  table, thead, tbody, th, td, tr{ display:block; width:100%; }
+  thead{ display:none; }
+  tbody tr{ background: var(--bg-panel); border: 1px solid var(--line); border-radius: 6px; margin-bottom: 12px; padding: 4px 0; position:relative; }
+  td{ display:flex; justify-content:space-between; align-items:flex-start; gap:12px; padding: 8px 12px; border-bottom: 1px dashed var(--line); text-align:right; }
+  td:last-child{ border-bottom:none; }
+  td::before{ content: attr(data-label); font-family: var(--font-mono); font-size:10px; text-transform:uppercase; letter-spacing:.05em; color: var(--ink-soft); text-align:left; flex-shrink:0; }
+  .notas-cell{ max-width: 60%; text-align:right; }
+  .actions-cell{ justify-content:flex-end; width:100%; }
+}
+</style>
+</head>
+<body>
+
+<!-- ======================= SETUP SCREEN ======================= -->
+<div class="wrap setup-wrap" id="setup-screen">
+  <div class="panel frame">
+    <div class="corners"><i class="tl"></i><i class="tr"></i><i class="bl"></i><i class="br"></i></div>
+    <div class="eyebrow">Configuración inicial · una sola vez</div>
+    <h1 style="font-size:20px;">Conectar almacenamiento compartido</h1>
+    <p class="help-text">Para que vos y la otra persona vean los mismos departamentos, los datos se guardan en un lugar gratis llamado <strong>jsonbin.io</strong>, no en este archivo. Tarda dos minutos:</p>
+    <ol>
+      <li>Entra a <a href="https://jsonbin.io/login" target="_blank">jsonbin.io</a> y crea una cuenta gratis (con tu correo o Google).</li>
+      <li>En tu panel, click en <strong>"Create Bin"</strong>. Borra lo que aparezca y pega esto: <code>{"listings":[],"config":{"ufHoy":40790.42}}</code> y guarda.</li>
+      <li>Copia el <strong>Bin ID</strong> (lo ves en la URL del bin o arriba del cuadro) y pégalo abajo.</li>
+      <li>Ve a <a href="https://jsonbin.io/app/api-keys" target="_blank">API Keys</a> en tu cuenta, copia tu <strong>X-Master-Key</strong> y pégala abajo.</li>
+    </ol>
+    <div class="setup-grid">
+      <div class="field">
+        <label for="setup-binid">Bin ID</label>
+        <input type="text" id="setup-binid" placeholder="Ej: 6839a1f2e41b4d34e4...">
+      </div>
+      <div class="field">
+        <label for="setup-key">X-Master-Key</label>
+        <input type="text" id="setup-key" placeholder="Ej: $2a$10$....">
+      </div>
+    </div>
+    <div id="setup-error" class="error-text" style="display:none; margin-top:10px;"></div>
+    <div class="form-actions">
+      <button class="btn btn-primary" id="setup-save-btn">Conectar y entrar</button>
+    </div>
+    <p class="help-text" style="margin-top:18px;">¿La otra persona ya creó el bin? Pídele que use el botón <strong>"Compartir"</strong> dentro de la página: te va a mandar un link que completa esto automáticamente.</p>
+  </div>
+</div>
+
+<!-- ======================= APP ======================= -->
+<div class="wrap" id="app" style="display:none;">
+
+  <header class="titleblock frame">
+    <div class="corners"><i class="tl"></i><i class="tr"></i><i class="bl"></i><i class="br"></i></div>
+    <div class="eyebrow">Seguimiento de compra · Propiedad</div>
+    <h1>Bitácora de Departamentos</h1>
+    <p class="project-name">Proyecto Departamento Mia Laciart Monardez</p>
+
+    <div class="sync-row">
+      <span id="sync-status">Cargando...</span>
+      <div class="sync-actions">
+        <button class="btn btn-ghost btn-small" id="refresh-btn">↻ Actualizar</button>
+        <button class="btn btn-ghost btn-small" id="share-btn">🔗 Compartir con la otra persona</button>
+        <button class="btn btn-ghost btn-small" id="disconnect-btn">⚙ Cambiar conexión</button>
+      </div>
+    </div>
+
+    <div class="stats-row">
+      <div class="stat">
+        <div class="stat-label">Total</div>
+        <div class="stat-value" id="stat-total">0</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Favoritos</div>
+        <div class="stat-value" id="stat-favoritos">0</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">UF hoy (automático)</div>
+        <div class="stat-value editable" id="stat-uf" title="Se actualiza sola cada día. Click para ajustarla a mano si hace falta."></div>
+      </div>
+    </div>
+  </header>
+
+  <div class="toolbar">
+    <div class="filters" id="filters"></div>
+    <button class="btn btn-primary" id="toggle-form-btn">+ Agregar departamento</button>
+  </div>
+
+  <section class="panel frame" id="form-panel" style="display:none;">
+    <div class="corners"><i class="tl"></i><i class="tr"></i><i class="bl"></i><i class="br"></i></div>
+    <h2 class="panel-title" id="form-title">Agregar departamento</h2>
+    <form id="apt-form">
+      <div class="form-grid">
+        <div class="field span-2">
+          <label for="f-link">Link del aviso *</label>
+          <input type="url" id="f-link" placeholder="https://...">
+        </div>
+        <div class="field">
+          <label for="f-comuna">Comuna</label>
+          <input type="text" id="f-comuna" placeholder="Ej: Ñuñoa">
+        </div>
+        <div class="field">
+          <label for="f-direccion">Dirección o nombre</label>
+          <input type="text" id="f-direccion" placeholder="Ej: Av. Irarrázaval 1234">
+        </div>
+
+        <div class="field">
+          <label for="f-uf">Precio en UF</label>
+          <input type="number" id="f-uf" step="0.1" placeholder="Ej: 4500">
+        </div>
+        <div class="field">
+          <label for="f-clp">Precio en CLP</label>
+          <input type="number" id="f-clp" step="1000" placeholder="Si no es en UF">
+        </div>
+        <div class="field">
+          <label for="f-m2">m² útiles</label>
+          <input type="number" id="f-m2" step="0.1" placeholder="Ej: 55">
+        </div>
+        <div class="field">
+          <label for="f-dorm">Dormitorios / Baños</label>
+          <div style="display:flex; gap:6px;">
+            <input type="number" id="f-dorm" placeholder="Dorm." min="0">
+            <input type="number" id="f-banos" placeholder="Baños" min="0">
+          </div>
+        </div>
+
+        <div class="field span-2">
+          <label>Extras</label>
+          <div class="checks">
+            <label class="check"><input type="checkbox" id="f-estac"> Estacionamiento</label>
+            <label class="check"><input type="checkbox" id="f-bodega"> Bodega</label>
+          </div>
+        </div>
+        <div class="field span-2">
+          <label for="f-notas">Notas (gastos comunes, contribuciones, estado, etc.)</label>
+          <textarea id="f-notas" placeholder="Lo que quieras recordar de este depto"></textarea>
+        </div>
+      </div>
+      <div id="form-error" class="error-text" style="display:none;">Agrega al menos el link del aviso.</div>
+      <div class="form-actions">
+        <button type="button" class="btn" id="cancel-form-btn">Cancelar</button>
+        <button type="submit" class="btn btn-primary">Guardar departamento</button>
+      </div>
+    </form>
+  </section>
+
+  <div id="empty-state" class="empty" style="display:none;">
+    <div class="eyebrow" style="color:var(--ink-faint);">Plano vacío</div>
+    <p>Todavía no hay nada guardado. Agrega el primer aviso para empezar a comparar precios, metraje y ubicación.</p>
+    <button class="btn btn-primary" id="empty-add-btn">Agregar el primero</button>
+  </div>
+
+  <div class="table-wrap" id="table-wrap" style="display:none;">
+    <table>
+      <thead>
+        <tr>
+          <th style="width:34px;">N°</th>
+          <th style="width:90px;">Estado</th>
+          <th>Dirección / Comuna</th>
+          <th class="sortable" data-sort="precio">Precio <span class="arrow" id="arrow-precio"></span></th>
+          <th class="sortable" data-sort="m2">m² <span class="arrow" id="arrow-m2"></span></th>
+          <th>Dorm · Baños</th>
+          <th>Extras</th>
+          <th>Notas</th>
+          <th style="width:90px;">Acciones</th>
+        </tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+
+  <footer>
+    <div class="hint">Los datos se guardan en tu bin de jsonbin.io y se sincronizan entre todos los que entren con el mismo link de "Compartir". Igual te recomendamos bajar un respaldo de vez en cuando.</div>
+    <div class="backup-actions">
+      <button class="btn btn-small" id="export-btn">Descargar respaldo</button>
+      <button class="btn btn-small" id="import-btn">Importar respaldo</button>
+      <input type="file" id="import-input" accept="application/json">
+    </div>
+  </footer>
+
+</div>
+
+<script>
+const CONN_KEY = 'depto-tracker-connection';
+
+let listings = [];
+let config = { ufHoy: 40790.42, ufFecha: null };
+let currentFilter = 'todos';
+let sortKey = null;
+let sortDir = 1;
+let editingId = null;
+
+const $ = (sel) => document.querySelector(sel);
+const tbody = $('#tbody');
+
+function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
+
+function fmtCLP(n){
+  if(n === null || n === undefined || isNaN(n)) return '—';
+  return '$' + Math.round(n).toLocaleString('es-CL');
+}
+function fmtUF(n){
+  if(n === null || n === undefined || isNaN(n)) return '—';
+  return n.toLocaleString('es-CL', {minimumFractionDigits:1, maximumFractionDigits:2}) + ' UF';
+}
+function fmtNum(n){
+  if(n === null || n === undefined || isNaN(n)) return '—';
+  return n.toLocaleString('es-CL');
+}
+function nowTime(){
+  return new Date().toLocaleTimeString('es-CL', {hour:'2-digit', minute:'2-digit'});
+}
+
+function clpEquivalent(l){
+  if(l.precioCLP) return l.precioCLP;
+  if(l.precioUF) return l.precioUF * config.ufHoy;
+  return null;
+}
+function pricePerM2(l){
+  const clp = clpEquivalent(l);
+  if(!clp || !l.m2) return null;
+  return clp / l.m2;
+}
+
+/* ---------------- connection (jsonbin) ---------------- */
+function getConn(){
+  try{
+    const raw = localStorage.getItem(CONN_KEY);
+    return raw ? JSON.parse(raw) : null;
+  }catch(e){ return null; }
+}
+function setConn(binId, masterKey){
+  localStorage.setItem(CONN_KEY, JSON.stringify({binId, masterKey}));
+}
+function clearConn(){
+  localStorage.removeItem(CONN_KEY);
+}
+
+async function apiGet(){
+  const conn = getConn();
+  const res = await fetch(`https://api.jsonbin.io/v3/b/${conn.binId}/latest`, {
+    headers: { 'X-Master-Key': conn.masterKey, 'X-Bin-Meta': 'false' }
+  });
+  if(!res.ok) throw new Error('HTTP ' + res.status);
+  return await res.json();
+}
+async function apiPut(data){
+  const conn = getConn();
+  const res = await fetch(`https://api.jsonbin.io/v3/b/${conn.binId}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', 'X-Master-Key': conn.masterKey },
+    body: JSON.stringify(data)
+  });
+  if(!res.ok) throw new Error('HTTP ' + res.status);
+  return await res.json();
+}
+
+function setStatus(text){
+  const el = $('#sync-status');
+  if(el) el.textContent = text;
+}
+
+async function loadData(){
+  setStatus('Cargando...');
+  let ok = false;
+  try{
+    const data = await apiGet();
+    listings = Array.isArray(data.listings) ? data.listings : [];
+    if(data.config && data.config.ufHoy) config = data.config;
+    setStatus('Actualizado a las ' + nowTime());
+    ok = true;
+  }catch(e){
+    setStatus('No se pudo cargar: ' + diagnoseError(e));
+  }
+  render();
+  if(ok) autoUpdateUF();
+}
+
+function todayStr(){
+  const d = new Date();
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+}
+
+async function autoUpdateUF(){
+  if(config.ufFecha === todayStr()) return; // ya está al día
+  try{
+    const res = await fetch('https://mindicador.cl/api');
+    if(!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    if(data && data.uf && data.uf.valor){
+      config.ufHoy = data.uf.valor;
+      config.ufFecha = todayStr();
+      await saveAll();
+      renderStats();
+      render();
+    }
+  }catch(e){
+    console.warn('No se pudo actualizar la UF automáticamente:', e);
+  }
+}
+
+async function saveAll(){
+  setStatus('Guardando...');
+  try{
+    await apiPut({ listings, config });
+    setStatus('Guardado · ' + nowTime());
+  }catch(e){
+    setStatus('No se pudo guardar: ' + diagnoseError(e));
+  }
+}
+
+/* ---------------- setup screen ---------------- */
+function showApp(){
+  $('#setup-screen').style.display = 'none';
+  $('#app').style.display = 'block';
+  loadData();
+}
+function showSetup(){
+  $('#app').style.display = 'none';
+  $('#setup-screen').style.display = 'block';
+}
+
+function initConnection(){
+  const params = new URLSearchParams(window.location.search);
+  const urlBin = params.get('bin');
+  const urlKey = params.get('key');
+  if(urlBin && urlKey){
+    setConn(urlBin, urlKey);
+    const cleanUrl = window.location.origin + window.location.pathname;
+    window.history.replaceState({}, '', cleanUrl);
+  }
+  const conn = getConn();
+  if(conn && conn.binId && conn.masterKey){
+    showApp();
+  } else {
+    showSetup();
+  }
+}
+
+$('#setup-save-btn').addEventListener('click', async () => {
+  const binId = $('#setup-binid').value.trim();
+  const masterKey = $('#setup-key').value.trim();
+  const errEl = $('#setup-error');
+  errEl.style.display = 'none';
+  if(!binId || !masterKey){
+    errEl.textContent = 'Completa el Bin ID y la X-Master-Key.';
+    errEl.style.display = 'block';
+    return;
+  }
+  setConn(binId, masterKey);
+  try{
+    await apiGet();
+    showApp();
+  }catch(e){
+    clearConn();
+    errEl.textContent = diagnoseError(e);
+    errEl.style.display = 'block';
+  }
+});
+
+function diagnoseError(e){
+  if(window.location.protocol === 'file:'){
+    return 'Estás abriendo este archivo localmente (doble click), y por seguridad el navegador bloquea este tipo de conexión a internet desde un archivo local. Primero subí el archivo a GitHub Pages (o a otro hosting) y abrilo desde ese link.';
+  }
+  const msg = e && e.message ? e.message : '';
+  if(msg.includes('401') || msg.includes('403')){
+    return 'La clave (X-Master-Key) no es válida para este Bin ID. Volvé a copiarla desde jsonbin.io/app/api-keys, sin espacios de más.';
+  }
+  if(msg.includes('404')){
+    return 'No encontramos un bin con ese Bin ID. Volvé a copiarlo desde la URL del bin en jsonbin.io (es el código después de /b/).';
+  }
+  if(msg.includes('Failed to fetch') || msg.includes('NetworkError') || e instanceof TypeError){
+    return 'No se pudo conectar a internet desde esta página. Revisa tu conexión, o si estás abriendo el archivo localmente, subilo primero a GitHub Pages.';
+  }
+  return 'No pudimos conectarnos (' + msg + '). Revisa que el Bin ID y la clave estén bien copiados.';
+}
+
+$('#refresh-btn').addEventListener('click', loadData);
+$('#disconnect-btn').addEventListener('click', () => {
+  if(confirm('Esto solo desconecta este navegador, no borra los datos. ¿Cambiar de conexión?')){
+    clearConn();
+    showSetup();
+  }
+});
+$('#share-btn').addEventListener('click', async () => {
+  const conn = getConn();
+  const url = `${window.location.origin}${window.location.pathname}?bin=${encodeURIComponent(conn.binId)}&key=${encodeURIComponent(conn.masterKey)}`;
+  try{
+    await navigator.clipboard.writeText(url);
+    alert('Link copiado. Mándaselo a la otra persona (WhatsApp, mail, etc). Al abrirlo va a quedar conectada a la misma lista automáticamente.');
+  }catch(e){
+    prompt('Copia este link y mándaselo a la otra persona:', url);
+  }
+});
+
+window.addEventListener('focus', () => {
+  if($('#app').style.display !== 'none' && getConn()){
+    loadData();
+  }
+});
+
+function cornersHTML(){
+  return '<div class="corners"><i class="tl"></i><i class="tr"></i><i class="bl"></i><i class="br"></i></div>';
+}
+
+/* ---------- filters ---------- */
+const FILTERS = [
+  {key:'todos', label:'Todos'},
+  {key:'pendientes', label:'Pendientes'},
+  {key:'favoritos', label:'Favoritos'},
+  {key:'descartados', label:'Descartados'},
+];
+function renderFilters(){
+  const el = $('#filters');
+  el.innerHTML = FILTERS.map(f => {
+    const count = listings.filter(l => matchesFilter(l, f.key)).length;
+    return `<button class="filter-btn ${currentFilter===f.key?'active':''}" data-filter="${f.key}">${f.label} (${count})</button>`;
+  }).join('');
+  el.querySelectorAll('.filter-btn').forEach(b => {
+    b.addEventListener('click', () => { currentFilter = b.dataset.filter; render(); });
+  });
+}
+function matchesFilter(l, key){
+  if(key==='todos') return true;
+  if(key==='pendientes') return !l.revisado && !l.descartado;
+  if(key==='revisados') return l.revisado;
+  if(key==='favoritos') return l.favorito;
+  if(key==='descartados') return l.descartado;
+  return true;
+}
+
+/* ---------- stats ---------- */
+function renderStats(){
+  $('#stat-total').textContent = listings.length;
+  $('#stat-favoritos').textContent = listings.filter(l=>l.favorito).length;
+  const ufEl = $('#stat-uf');
+  if(!ufEl.querySelector('input')){
+    ufEl.textContent = fmtCLP(config.ufHoy);
+  }
+}
+$('#stat-uf').addEventListener('click', function(){
+  if(this.querySelector('input')) return;
+  const current = config.ufHoy;
+  this.innerHTML = `<input type="number" step="0.01" value="${current}">`;
+  const input = this.querySelector('input');
+  input.focus(); input.select();
+  const commit = async () => {
+    const val = parseFloat(input.value);
+    if(!isNaN(val) && val > 0){ config.ufHoy = val; config.ufFecha = todayStr(); await saveAll(); }
+    renderStats(); render();
+  };
+  input.addEventListener('blur', commit);
+  input.addEventListener('keydown', e => { if(e.key==='Enter') input.blur(); });
+});
+
+/* ---------- form ---------- */
+function showForm(listing){
+  editingId = listing ? listing.id : null;
+  $('#form-title').textContent = listing ? 'Editar departamento' : 'Agregar departamento';
+  $('#form-panel').style.display = 'block';
+  $('#form-error').style.display = 'none';
+  $('#f-link').value = listing ? (listing.link||'') : '';
+  $('#f-comuna').value = listing ? (listing.comuna||'') : '';
+  $('#f-direccion').value = listing ? (listing.direccion||'') : '';
+  $('#f-uf').value = listing && listing.precioUF !== null ? listing.precioUF : '';
+  $('#f-clp').value = listing && listing.precioCLP !== null ? listing.precioCLP : '';
+  $('#f-m2').value = listing && listing.m2 !== null ? listing.m2 : '';
+  $('#f-dorm').value = listing && listing.dormitorios !== null ? listing.dormitorios : '';
+  $('#f-banos').value = listing && listing.banos !== null ? listing.banos : '';
+  $('#f-estac').checked = listing ? !!listing.estacionamiento : false;
+  $('#f-bodega').checked = listing ? !!listing.bodega : false;
+  $('#f-notas').value = listing ? (listing.notas||'') : '';
+  $('#toggle-form-btn').textContent = 'Cerrar formulario';
+  $('#f-link').focus();
+}
+function hideForm(){
+  editingId = null;
+  $('#form-panel').style.display = 'none';
+  $('#toggle-form-btn').textContent = '+ Agregar departamento';
+}
+$('#toggle-form-btn').addEventListener('click', () => {
+  if($('#form-panel').style.display === 'none') showForm(null);
+  else hideForm();
+});
+$('#cancel-form-btn').addEventListener('click', hideForm);
+$('#empty-add-btn').addEventListener('click', () => showForm(null));
+
+$('#apt-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const link = $('#f-link').value.trim();
+  if(!link){ $('#form-error').style.display = 'block'; return; }
+
+  const data = {
+    link,
+    comuna: $('#f-comuna').value.trim(),
+    direccion: $('#f-direccion').value.trim(),
+    precioUF: $('#f-uf').value ? parseFloat($('#f-uf').value) : null,
+    precioCLP: $('#f-clp').value ? parseFloat($('#f-clp').value) : null,
+    m2: $('#f-m2').value ? parseFloat($('#f-m2').value) : null,
+    dormitorios: $('#f-dorm').value ? parseInt($('#f-dorm').value) : null,
+    banos: $('#f-banos').value ? parseInt($('#f-banos').value) : null,
+    estacionamiento: $('#f-estac').checked,
+    bodega: $('#f-bodega').checked,
+    notas: $('#f-notas').value.trim(),
+  };
+
+  if(editingId){
+    const idx = listings.findIndex(l => l.id === editingId);
+    if(idx > -1) listings[idx] = {...listings[idx], ...data};
+  } else {
+    listings.push({
+      id: uid(),
+      ...data,
+      revisado:false, favorito:false, descartado:false,
+      fechaAgregado: new Date().toISOString(),
+    });
+  }
+  await saveAll();
+  hideForm();
+  render();
+});
+
+/* ---------- table render ---------- */
+function sortedFiltered(){
+  let arr = listings.filter(l => matchesFilter(l, currentFilter));
+  if(sortKey){
+    arr = arr.slice().sort((a,b) => {
+      const va = sortKey==='precio' ? (clpEquivalent(a) ?? Infinity) : (a.m2 ?? -Infinity);
+      const vb = sortKey==='precio' ? (clpEquivalent(b) ?? Infinity) : (b.m2 ?? -Infinity);
+      return (va - vb) * sortDir;
+    });
+  }
+  return arr;
+}
+
+function computeBadges(visible){
+  const active = visible.filter(l => !l.descartado);
+  const result = {};
+  if(active.length >= 2){
+    const withPrice = active.filter(l => clpEquivalent(l) !== null);
+    if(withPrice.length >= 2){
+      const cheapest = withPrice.reduce((a,b) => clpEquivalent(a) <= clpEquivalent(b) ? a : b);
+      result.cheapest = cheapest.id;
+    }
+    const withM2 = active.filter(l => l.m2 !== null);
+    if(withM2.length >= 2){
+      const biggest = withM2.reduce((a,b) => a.m2 >= b.m2 ? a : b);
+      result.biggest = biggest.id;
+    }
+  }
+  return result;
+}
+
+function rowHTML(l, badges, num){
+  const priceLine = l.precioUF ? fmtUF(l.precioUF) : (l.precioCLP ? fmtCLP(l.precioCLP) : '—');
+  const priceSub = l.precioUF && l.precioCLP ? fmtCLP(l.precioCLP) :
+                    l.precioUF ? fmtCLP(l.precioUF * config.ufHoy) : '';
+  const extras = [
+    l.estacionamiento ? 'Estac.' : null,
+    l.bodega ? 'Bodega' : null,
+  ].filter(Boolean).join(' · ') || '—';
+  const fecha = l.fechaAgregado ? new Date(l.fechaAgregado).toLocaleDateString('es-CL') : '';
+
+  let priceBadge = badges.cheapest === l.id ? '<span class="badge badge-moss">Más económico</span>' : '';
+  let m2Badge = badges.biggest === l.id ? '<span class="badge badge-copper">Más grande</span>' : '';
+
+  return `
+  <tr class="${l.descartado ? 'descartado' : ''}" data-id="${l.id}">
+    <td data-label="N°"><span class="row-num">${num}</span></td>
+    <td data-label="Estado">
+      <div class="state-checks">
+        <label><input type="checkbox" class="chk-revisado" ${l.revisado?'checked':''}> ${l.revisado?'<span class="tag-revisado">Revisado</span>':'Pendiente'}</label>
+        <label><input type="checkbox" class="chk-favorito" ${l.favorito?'checked':''}> <span class="${l.favorito?'tag-favorito':''}">★ Favorito</span></label>
+        <label><input type="checkbox" class="chk-descartado" ${l.descartado?'checked':''}> <span class="${l.descartado?'tag-descartado':''}">Descartar</span></label>
+      </div>
+    </td>
+    <td data-label="Dirección">
+      <div class="addr">${l.direccion || '(sin nombre)'}</div>
+      <div class="comuna">${l.comuna || ''}</div>
+      <div class="fecha">Agregado ${fecha}</div>
+    </td>
+    <td data-label="Precio">
+      <div class="price-main">${priceLine}</div>
+      ${priceSub ? `<div class="price-sub">≈ ${priceSub}</div>` : ''}
+      ${priceBadge}
+    </td>
+    <td data-label="m²"><span class="m2val">${l.m2 ? fmtNum(l.m2) : '—'}</span> ${m2Badge}</td>
+    <td data-label="Dorm · Baños">${l.dormitorios ?? '—'} · ${l.banos ?? '—'}</td>
+    <td data-label="Extras"><span class="extras">${extras}</span></td>
+    <td data-label="Notas"><div class="notas-cell editable-notes" title="Click para editar">${l.notas ? l.notas : '<span class="notas-placeholder">Agregar nota…</span>'}</div></td>
+    <td data-label="Acciones">
+      <div class="actions-cell">
+        <button class="icon-btn open-link" title="Abrir aviso">↗</button>
+        <button class="icon-btn edit-row" title="Editar">✎</button>
+        <button class="icon-btn danger del-row" title="Eliminar">✕</button>
+      </div>
+    </td>
+  </tr>`;
+}
+
+function render(){
+  renderFilters();
+  renderStats();
+
+  const visible = sortedFiltered();
+  const hasAny = listings.length > 0;
+
+  $('#empty-state').style.display = hasAny ? 'none' : 'block';
+  $('#table-wrap').style.display = hasAny ? 'block' : 'none';
+  if(!hasAny){ tbody.innerHTML = ''; return; }
+
+  const badges = computeBadges(visible);
+  tbody.innerHTML = visible.map((l, i) => rowHTML(l, badges, i+1)).join('');
+
+  tbody.querySelectorAll('tr').forEach(tr => {
+    const id = tr.dataset.id;
+    const listing = listings.find(l => l.id === id);
+    tr.querySelector('.chk-revisado').addEventListener('change', async (e) => {
+      listing.revisado = e.target.checked; await saveAll(); render();
+    });
+    tr.querySelector('.chk-favorito').addEventListener('change', async (e) => {
+      listing.favorito = e.target.checked; await saveAll(); render();
+    });
+    tr.querySelector('.chk-descartado').addEventListener('change', async (e) => {
+      listing.descartado = e.target.checked; await saveAll(); render();
+    });
+    tr.querySelector('.open-link').addEventListener('click', () => {
+      if(listing.link) window.open(listing.link, '_blank');
+    });
+    tr.querySelector('.edit-row').addEventListener('click', () => showForm(listing));
+    tr.querySelector('.del-row').addEventListener('click', async () => {
+      if(confirm('¿Eliminar este departamento de la bitácora?')){
+        listings = listings.filter(l => l.id !== id);
+        await saveAll(); render();
+      }
+    });
+    tr.querySelector('.editable-notes').addEventListener('click', function(){
+      if(this.querySelector('textarea')) return;
+      this.innerHTML = '';
+      const ta = document.createElement('textarea');
+      ta.className = 'notas-edit';
+      ta.value = listing.notas || '';
+      this.appendChild(ta);
+      ta.focus();
+      ta.setSelectionRange(ta.value.length, ta.value.length);
+      let saved = false;
+      const commit = async () => {
+        if(saved) return;
+        saved = true;
+        listing.notas = ta.value.trim();
+        await saveAll();
+        render();
+      };
+      ta.addEventListener('blur', commit);
+      ta.addEventListener('keydown', e => {
+        if(e.key === 'Enter' && (e.ctrlKey || e.metaKey)) ta.blur();
+        if(e.key === 'Escape'){ saved = true; render(); }
+      });
+    });
+
+  });
+
+  ['precio','m2'].forEach(k => { const a = $('#arrow-'+k); if(a) a.textContent=''; });
+  if(sortKey){
+    const a = $('#arrow-'+sortKey);
+    if(a) a.textContent = sortDir === 1 ? '▲' : '▼';
+  }
+}
+
+document.querySelectorAll('th.sortable').forEach(th => {
+  th.addEventListener('click', () => {
+    const key = th.dataset.sort;
+    if(sortKey === key){ sortDir *= -1; } else { sortKey = key; sortDir = 1; }
+    render();
+  });
+});
+
+/* ---------- backup ---------- */
+$('#export-btn').addEventListener('click', () => {
+  const blob = new Blob([JSON.stringify({listings, config}, null, 2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'respaldo-departamentos.json';
+  a.click();
+  URL.revokeObjectURL(url);
+});
+$('#import-btn').addEventListener('click', () => $('#import-input').click());
+$('#import-input').addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = async (ev) => {
+    try{
+      const parsed = JSON.parse(ev.target.result);
+      const incoming = Array.isArray(parsed) ? parsed : parsed.listings;
+      if(!Array.isArray(incoming)) throw new Error('formato inválido');
+      if(confirm(`Se encontraron ${incoming.length} departamentos en el respaldo. ¿Reemplazar los datos actuales?`)){
+        listings = incoming;
+        if(parsed.config && parsed.config.ufHoy) config = parsed.config;
+        await saveAll();
+        render();
+      }
+    }catch(err){
+      alert('No se pudo leer el archivo de respaldo.');
+    }
+    e.target.value = '';
+  };
+  reader.readAsText(file);
+});
+
+initConnection();
+</script>
+</body>
+</html>
